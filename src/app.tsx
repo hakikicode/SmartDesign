@@ -8,13 +8,13 @@ import { enableCollaboration, integrateFeedback } from './collaboration';
 import { findFonts, getTemporaryUrl, requestFontSelection, upload } from '@canva/asset';
 import { addAudioTrack, addNativeElement, addPage, getCurrentPageContext, getDefaultPageDimensions, getDesignToken, initAppElement, overlay, requestExport, selection, setCurrentPageBackground, ui } from '@canva/design';
 import { auth } from '@canva/user';
-import { UserSettings} from './UserSettings';
+import { UserSettings } from './UserSettings';
 import { useNotifications } from './useNotifications';
 import { Collaboration } from './Collaborations';
 import { ContentFilter } from './ContentFilter';
 import { useTranslation } from 'react-i18next';
 
-const SEVER_URL = ''
+const SERVER_URL = '';
 
 export const App = () => {
   const { t } = useTranslation();
@@ -25,7 +25,7 @@ export const App = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
-  const [collaborationUpdates, setCollaborationUpdates] =useState([]);
+  const [collaborationUpdates, setCollaborationUpdates] = useState([]);
   const [userSettings, setUserSettings] = useState({
     frontStyle: 'Regular',
     layout: 'Centered'
@@ -37,25 +37,21 @@ export const App = () => {
 
   useNotifications(collaborationUpdates);
 
-
-
   useEffect(() => {
     const fetchUpdates = async () => {
       try {
-        const response = await fetch('${SEVER_URL}/updates');
+        const response = await fetch(`${SERVER_URL}/updates`);
         const updates = await response.json();
         setCollaborationUpdates(updates);
       } catch (error) {
-        console.error('Error fetching updates;', error);
-        console.error('Failed to fetch updates.');
+        console.error('Error fetching updates:', error);
       }
     };
 
-    const interval = setInterval(fetchUpdates, 5000) //fetch updates every 5 seconds
+    const interval = setInterval(fetchUpdates, 5000); // Fetch updates every 5 seconds
 
     return () => clearInterval(interval);
   }, []);
-
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -68,9 +64,9 @@ export const App = () => {
             setSuggestions(suggestions);
             canva.updateSuggestions(suggestions);
           } catch (err) {
-            console.error('Failed to fetch design suggestion.');
+            console.error('Failed to fetch design suggestions.');
           }
-          setLoading(false);  
+          setLoading(false);
         });
 
         canva.onEvent('enhanceDesign', async (design) => {
@@ -84,7 +80,7 @@ export const App = () => {
           } catch (err) {
             console.error('Failed to enhance design.');
           }
-          setLoading(false);  
+          setLoading(false);
         });
 
         canva.onEvent('fetchContent', async (theme: string) => {
@@ -93,14 +89,13 @@ export const App = () => {
           try {
             const content = await fetchDynamicContent(theme);
             setContent(content);
-            canva.updateContent(content); 
+            canva.updateContent(content);
           } catch (err) {
             console.error('Failed to fetch content.');
           }
           setLoading(false);
         });
 
-        
         canva.onEvent('fetchLiveData', async () => {
           setLoading(true);
           setError(null);
@@ -109,7 +104,7 @@ export const App = () => {
             setLiveData(data);
             canva.updateLiveData(data);
           } catch (err) {
-            console.error ('Failed to fetch live data.');
+            console.error('Failed to fetch live data.');
           }
           setLoading(false);
         });
@@ -117,12 +112,12 @@ export const App = () => {
         canva.onEvent('collaborate', enableCollaboration);
         canva.onEvent('feedback', integrateFeedback);
 
-        //Fetch user info on app initialization
+        // Fetch user info on app initialization
         try {
-          const user= await auth.getCurrentUser();
+          const user = await auth.getCurrentUser();
           setUser(user);
         } catch (err) {
-          console.error('Failed to fetch user info',err);
+          console.error('Failed to fetch user info', err);
         }
       });
     };
@@ -170,8 +165,9 @@ export const App = () => {
   const addComment = (comment) => {
     setCollaborationUpdates([...collaborationUpdates, { message: comment }]);
   };
+  
   const assignTask = (task) => {
-    setCollaborationUpdates([...collaborationUpdates, { message:'Task assigned: ${task}' }]);
+    setCollaborationUpdates([...collaborationUpdates, { message: `Task assigned: ${task}` }]);
   };
 
   const handleAddAudioTrack = async () => {
@@ -179,7 +175,7 @@ export const App = () => {
     setError(null);
     try {
       await addAudioTrack({
-        url: '', 
+        url: '',
         name: 'Audio'
       });
       console.log('Audio track added');
@@ -196,7 +192,7 @@ export const App = () => {
       await addNativeElement({
         type: 'TEXT',
         properties: {
-          text: 'Hello, Cava!',
+          text: 'Hello, Canva!',
           frontSize: 23,
           color: '#000000'
         }
@@ -207,26 +203,30 @@ export const App = () => {
     }
     setLoading(false);
   };
+
   const handleAddPage = async () => {
     setLoading(true);
     setError(null);
     try {
-       
+      await addPage();
+      console.log('Page added');
+    } catch (error) {
+      console.error('Error adding page');
     }
-  }
-  
+    setLoading(false);
+  };
 
   return (
     <div className="app-container">
       <h1>Canva SmartDesign Assistant</h1>
       <button onClick={handleAsset}>Get Asset</button>
       <button onClick={handleDesign}>Get Design</button>
-      <button onClick= {() => console.log('User:', user)}>Get User</button>
-      <button onClick= {handleUser}>Get User</button>
+      <button onClick={handleUser}>Get User</button>
       <button onClick={handleAddAudioTrack}>Add Audio Track</button>
       <button onClick={handleAddNativeElement}>Add Native Element</button>
-      {loading && <p>Loading..</p>}
-      {error && <p style={{color: 'red'}}>{error}</p>}
+      <button onClick={handleAddPage}>Add Page</button>
+      {loading && <p>Loading...</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <UserSettings userSettings={userSettings} setUserSettings={setUserSettings} />
       <ContentFilter setFilter={setFilter} />
 
@@ -239,8 +239,8 @@ export const App = () => {
               <div>Font Style: {suggestion.details.frontStyle}</div>
               <div>Color: {suggestion.details.color}</div>
               <div>Layout: {suggestion.details.layout}</div>
-              </li>
-            ))}
+            </li>
+          ))}
         </ul>
       </div>
       <div>
@@ -259,42 +259,42 @@ export const App = () => {
         <h2>{t('Live Data')}</h2>
         <pre>{JSON.stringify(liveData, null, 2)}</pre>
       </div>
-        
-        <div>
+
+      <div>
         <h2>Collaboration</h2>
         <div>
-          <Input
-          type="text"
-          value={Comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder="Add a comment"
+          <input
+            type="text"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Add a comment"
           />
-          <button onClick={()=> addComment(Comment)}>Add Comment</button>
+          <button onClick={() => addComment(comment)}>Add Comment</button>
         </div>
         <div>
-          <Input
-          type="text"
-          value={task}
-          onChange={(e) => setTask(e.target.value)}
-          placeholder="Assign a task"
+          <input
+            type="text"
+            value={task}
+            onChange={(e) => setTask(e.target.value)}
+            placeholder="Assign a task"
           />
-          <button onClick={()=> assignTask(task)}>Assign Task</button>
+          <button onClick={() => assignTask(task)}>Assign Task</button>
         </div>
         <div>
-        <h3>Collaboration Updates</h3>
-        <ul>
-          {collaborationUpdates.map((updates, index) => (
-            <li key={index}>{updates.message}</li>
+          <h3>Collaboration Updates</h3>
+          <ul>
+            {collaborationUpdates.map((update, index) => (
+              <li key={index}>{update.message}</li>
             ))}
-        </ul>
+          </ul>
         </div>
         <div>
           <h2>User Settings</h2>
           <label>
             Theme:
             <select
-            value={userSettings.theme || 'light'}
-            onChange ={(e) => setUserSettings({ ...userSettings, theme: e.target.value })}
+              value={userSettings.theme || 'light'}
+              onChange={(e) => setUserSettings({ ...userSettings, theme: e.target.value })}
             >
               <option value="light">Light</option>
               <option value="dark">Dark</option>
