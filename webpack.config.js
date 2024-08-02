@@ -69,11 +69,12 @@ function buildConfig({
             {
               loader: "ts-loader",
               options: {
-                transpileOnly: true,
+                configFile: path.resolve(__dirname, "tsconfig.json"),
+                transpileOnly: false,
               },
             },
           ],
-        },
+        },        
         {
           test: /\.css$/,
           exclude: /node_modules/,
@@ -144,8 +145,6 @@ function buildConfig({
         new TerserPlugin({
           terserOptions: {
             format: {
-              // Turned on because emoji and regex is not minified properly using default
-              // https://github.com/facebook/create-react-app/issues/2488
               ascii_only: true,
             },
           },
@@ -161,7 +160,6 @@ function buildConfig({
       new DefinePlugin({
         BACKEND_HOST: JSON.stringify(backendHost),
       }),
-      // Apps can only submit a single JS file via the developer portal
       new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
     ],
     ...buildDevConfig(devConfig),
