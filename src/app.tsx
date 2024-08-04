@@ -225,6 +225,7 @@ export const App = () => {
       <button onClick={handleAddAudioTrack}>Add Audio Track</button>
       <button onClick={handleAddNativeElement}>Add Native Element</button>
       <button onClick={handleAddPage}>Add Page</button>
+      <button onClick={() => changeLanguage('en')}>English</button>
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <UserSettings userSettings={userSettings} setUserSettings={setUserSettings} />
